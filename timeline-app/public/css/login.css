@@ -1,0 +1,131 @@
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Login Container Styling */
+.login-container {
+    width: 30%;
+    max-width: 500px;
+    padding: 20px 30px;
+    border-radius: 10px;
+    background-color: #f0f8ff; /* Soft blue for background */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Form Styling */
+.form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Form Title */
+.form h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.logo {
+    width: 20%;
+    height: 20%;
+    color: red;
+    border-radius: 100%;
+}
+
+* {
+    font-family: "Roboto", sans-serif;
+    font-weight: 500;
+    font-style: normal;
+  }
+
+/* Basic Reset */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.row {
+    width: 100%;
+}
+
+/* Input Field Styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 10px 0;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #333;
+    transition: all 0.3s ease;
+    outline: none;
+    text-align: center;
+}
+
+/* Placeholder Color */
+input::placeholder,
+textarea::placeholder {
+    color: #aaa;
+}
+
+/* Focus State */
+input:focus,
+textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Label Styling */
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Input Hover Effect */
+input:hover,
+textarea:hover {
+    border-color: #555;
+}
+
+/* Submit Button Styling */
+button[type="submit"] {
+    display: inline-block;
+    padding: 12px 20px;
+    margin-top: 15px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+button[type="submit"]:active {
+    background-color: #004494;
+}

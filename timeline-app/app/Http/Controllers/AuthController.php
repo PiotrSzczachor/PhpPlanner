@@ -71,4 +71,24 @@ class AuthController extends Controller
         return view('pages.auth.login');
     }
 
+    public function changePassword(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json(['error' => 'Old password is incorrect.'], 400);
+        }
+
+        $user->password = $request->new_password;
+        $user->save();
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
+
+
 }

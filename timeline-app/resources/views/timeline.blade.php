@@ -8,6 +8,7 @@
     <style>
         body {
             margin: 0px;
+            height: 100vh;
         }
 
         header {
@@ -16,7 +17,10 @@
             align-items: center;
             background-color: #333;
             color: white;
-            padding: 10px 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+            height: 7%;
+            min-height: 42px;
         }
         .logo {
             font-size: 24px;
@@ -45,7 +49,7 @@
             background-color: #e74c3c;
         }
 
-        #timeline { height: 400px; }
+        #timeline { height: 600px; }
         .event-popup { 
             padding: 20px;
             display: none;
@@ -73,6 +77,32 @@
             font-weight: 500;
             font-style: normal;
         }
+
+        .info-stripe {
+            background-color: #f39c12;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #timeline, #timeline * {
+                visibility: visible;
+            }
+
+            #timeline {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+    }
+
     </style>
 </head>
 <body>
@@ -87,9 +117,10 @@
             @endif
         </div>
         <div class="header-btns">
+        <button id="print-btn">Print Timeline</button>
             @if(auth()->check())
                 <button id="open-category-modal" class="btn btn-primary">Manage Categories</button>
-                <button id="reset-password-btn">Reset Password</button>
+                <button id="reset-password-btn" class="btn btn-primary" onclick="window.location.href='/change-password'">Reset Password</button>
                 <button id="logout-btn">Logout</button>
             @else
                 <a href="/" class="btn btn-primary">Login</a>
@@ -97,21 +128,16 @@
         </div>
     </header>
 
+    <div class="info-stripe">
+        <p>To add an event, double-click on the timeline. To open event details, click on an event.</p>
+    </div>
+
     <div id="timeline"></div>
 
     @include('components.category-popup')
     @include('components.add-event-popup')
     @include('components.event-info-popup')
 
-    <!-- Event Info Popup -->
-    <div class="event-popup" id="event-popup">
-        <span class="popup-close" id="popup-close">&times;</span>
-        <h3 class="popup-header" id="popup-header">Event Details</h3>
-        <p id="popup-description"></p>
-        <img id="popup-image" src="" alt="Event Image" style="max-width: 100%; height: auto;">
-        <p><strong>Start Date: </strong><span id="popup-start-date"></span></p>
-        <p><strong>End Date: </strong><span id="popup-end-date"></span></p>
-    </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/vis-timeline@latest/standalone/umd/vis-timeline-graph2d.min.js"></script>
@@ -145,6 +171,7 @@
 
                     const container = document.getElementById('timeline');
                     const options = {
+                        height: "100%",
                         editable: true,
                         onRemove: function (item, callback) {
                             if (!userIsLoggedIn) {
@@ -258,7 +285,7 @@
 
                 document.getElementById('event-popup').style.display = 'block';
             }
-            if(document.getElementById('popup-close').onclick != null){
+            if(document.getElementById('popup-close') && document.getElementById('popup-close').onclick != null){
                 document.getElementById('popup-close').onclick = function() {
                 document.getElementById('event-popup').style.display = 'none';
             };
@@ -283,6 +310,10 @@
                         .catch(error => console.error('Error:', error));
                 });
             }
+        });
+
+        document.getElementById('print-btn').addEventListener('click', function() {
+            window.print();
         });
 
     </script>

@@ -6,6 +6,45 @@
     <title>Timeline</title>
     <link rel="stylesheet" href="https://unpkg.com/vis-timeline/styles/vis-timeline-graph2.min.css">
     <style>
+        body {
+            margin: 0px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .user-info {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .user-info img {
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .header-btns button {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background-color: #ff5733;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+        .header-btns button:hover {
+            background-color: #e74c3c;
+        }
+
         #timeline { height: 400px; }
         .event-popup { 
             padding: 20px;
@@ -28,10 +67,41 @@
         }
         .form-container { display: none; }
         .form-container input, .form-container textarea { margin: 10px 0; }
+
+        * {
+            font-family: "Roboto", sans-serif;
+            font-weight: 500;
+            font-style: normal;
+        }
     </style>
 </head>
 <body>
+    <header>
+        <div class="user-info">
+            @if(auth()->check())
+                <img src="https://www.gravatar.com/avatar/{{ md5(auth()->user()->email) }}" alt="User Image" width="40" height="40">
+                <span>{{ auth()->user()->name }} {{ auth()->user()->surname }}</span>
+            @else
+                <img src="https://www.gravatar.com/avatar/?d=mp" alt="Guest User Icon" width="40" height="40">
+                <span>Guest</span>
+            @endif
+        </div>
+        <div class="header-btns">
+            @if(auth()->check())
+                <button id="open-category-modal" class="btn btn-primary">Manage Categories</button>
+                <button id="reset-password-btn">Reset Password</button>
+                <button id="logout-btn">Logout</button>
+            @else
+                <a href="/" class="btn btn-primary">Login</a>
+            @endif
+        </div>
+    </header>
+
     <div id="timeline"></div>
+
+    @include('components.category-popup')
+    @include('components.add-event-popup')
+    @include('components.event-info-popup')
 
     <!-- Event Info Popup -->
     <div class="event-popup" id="event-popup">
@@ -43,36 +113,18 @@
         <p><strong>End Date: </strong><span id="popup-end-date"></span></p>
     </div>
 
-    <!-- Add Event Form -->
-    <div class="form-container" id="event-form-container">
-        <h3>Create New Event</h3>
-        <form id="event-form" enctype="multipart/form-data">
-            <label for="event-name">Event Name:</label>
-            <input type="text" id="event-name" required><br>
-
-            <label for="event-start-date">Start Date:</label>
-            <input type="datetime-local" id="event-start-date" required><br>
-
-            <label for="event-end-date">End Date:</label>
-            <input type="datetime-local" id="event-end-date" required><br>
-
-            <label for="event-description">Description:</label>
-            <textarea id="event-description" required></textarea><br>
-
-            <label for="event-image">Event Image:</label>
-            <input type="file" id="event-image" accept="image/*"><br>
-
-            <button type="submit">Add Event</button>
-        </form>
-        <button id="cancel-event" type="button">Cancel</button>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/vis-timeline@latest/standalone/umd/vis-timeline-graph2d.min.js"></script>
 
     <script>
         $(document).ready(function() {
             let timeline = null;
+            const userIsLoggedIn = '{{ auth()->check() }}';
+
+            if (!userIsLoggedIn) {
+                $('#open-category-modal').prop('disabled', true);
+                $('#open-category-modal').text('Please log in to manage categories');
+            }
 
             function fetchAndRenderTimeline() {
                 $.get('/api/events', function(data) {
@@ -81,7 +133,10 @@
                         content: event.name,
                         start: event.startDate,
                         end: event.endDate,
-                        image: event.image
+                        image: event.image,
+                        style: `background-color: ${event.category.color}`,
+                        editable: userIsLoggedIn ? {updateTime: false, remove: true} : false,
+                        data: {event: event}
                     }));
 
                     if (timeline) {
@@ -92,6 +147,12 @@
                     const options = {
                         editable: true,
                         onRemove: function (item, callback) {
+                            if (!userIsLoggedIn) {
+                                alert('You need to log in to delete events.');
+                                callback(false);
+                                return;
+                            }
+
                             if (confirm("Are you sure you want to delete this event?")) {
                                 $.ajax({
                                     url: '/api/events/' + item.id,
@@ -116,6 +177,12 @@
                             }
                         },
                         onAdd: function (item, callback) {
+                            if (!userIsLoggedIn) {
+                                alert('You need to log in to add events.');
+                                callback(false);
+                                return;
+                            }
+
                             $('#event-form-container').show();
                             $('#event-form')[0].reset();
 
@@ -128,6 +195,7 @@
                                 formData.append('endDate', $('#event-end-date').val());
                                 formData.append('description', $('#event-description').val());
                                 formData.append('image', $('#event-image')[0].files[0]);
+                                formData.append('category_id', $('#event-category').val());
                                 formData.append('_token', '{{ csrf_token() }}');
 
                                 $.ajax({
@@ -142,9 +210,10 @@
                                             content: response.name,
                                             start: response.startDate,
                                             end: response.endDate,
-                                            image: response.image
+                                            image: response.image,
+                                            category: response.category
                                         };
-                                        callback()
+                                        callback();
                                         fetchAndRenderTimeline();
                                         $('#event-form-container').hide();
                                     },
@@ -175,31 +244,47 @@
                 });
             }
 
-
             function showEventPopup(event) {
-                $('#popup-header').text(event.content);
-                $('#popup-description').text(event.description);
-                $('#popup-start-date').text(event.start);
-                $('#popup-end-date').text(event.end);
-                if (event.image) {
-                    $('#popup-image').show();
-                    $('#popup-image').attr('src', 'storage/' + event.image);
-                } else {
-                    $('#popup-image').hide();
-                }
+                const categoryName = event.data.event.category ? event.data.event.category.name : 'No category';
+                const categoryColor = event.data.event.category ? event.data.event.category.color : '#000000';
 
-                // Show the popup
-                $('#event-popup').show();
+                document.getElementById('event-info-popup-header').textContent = event.data.event.name;
+                document.getElementById('event-info-popup-description').textContent = event.data.event.description;
+                document.getElementById('event-info-popup-start-date').textContent = event.data.event.startDate;
+                document.getElementById('event-info-popup-end-date').textContent = event.data.event.endDate;
+                document.getElementById('event-info-popup-image').src = '/storage/' + event.data.event.image;
+                document.getElementById('event-info-popup-category-name').textContent = categoryName;
+                document.getElementById('event-info-popup-category-color').style.backgroundColor = categoryColor;
+
+                document.getElementById('event-popup').style.display = 'block';
             }
+            if(document.getElementById('popup-close').onclick != null){
+                document.getElementById('popup-close').onclick = function() {
+                document.getElementById('event-popup').style.display = 'none';
+            };
+            }
+            
 
-            // Close the popup when the close button is clicked
-            $('#popup-close').click(function() {
-                $('#event-popup').hide();
-            });
-
-            // Initial call to render the timeline
             fetchAndRenderTimeline();
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    fetch('/logout', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.message === 'User logged out successfully') {
+                                window.location.href = '/';
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
+            }
+        });
+
     </script>
 </body>
 </html>

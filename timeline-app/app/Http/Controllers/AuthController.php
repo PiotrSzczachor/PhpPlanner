@@ -10,7 +10,6 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
-    // User Registration
     public function register(Request $request)
     {
         $request->validate([
@@ -31,10 +30,9 @@ class AuthController extends Controller
 
         session(['jwt_token' => $token]);
 
-        return redirect('/timeline');
+        return redirect('/');
     }
 
-    // User Login
     public function login(Request $request)
     {
         $request->validate([
@@ -48,23 +46,29 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
     
-        // Store the token in the session
         session(['jwt_token' => $token]);
-    
-        // Redirect to the /timeline page
+
         return redirect('/timeline');
     }
 
-    // Get Authenticated User
     public function me()
     {
         return response()->json(auth()->user());
     }
 
-    // User Logout
     public function logout()
     {
         auth()->logout();
         return response()->json(['message' => 'User logged out successfully']);
     }
+
+    public function showLoginForm()
+    {
+        if (auth()->check()) {
+            return redirect('/timeline');
+        }
+
+        return view('pages.auth.login');
+    }
+
 }
